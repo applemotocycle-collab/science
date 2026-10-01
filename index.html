@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>理化實驗基地 Science Lab Pass</title>
+<script>
+/* =========================================================
+   背景圖庫 — 之後生成更多背景，存進 assets/ 資料夾後，
+   直接在下方陣列加一行檔名即可，每次進站會隨機挑一張。
+   放在 <head> 最前面、以行內 script 同步執行，確保在畫面
+   第一次繪製前就決定好背景，不會有「先看到預設圖、才跳成
+   隨機圖」的閃爍（FOUC）問題。
+   ========================================================= */
+(function setRandomBackground(){
+  var backgroundPatterns = [
+    './assets/bg-pattern-1.webp',
+    './assets/bg-pattern-2.webp',
+    './assets/bg-pattern-3.webp',
+    './assets/bg-pattern-4.webp'
+  ];
+  var pick = backgroundPatterns[Math.floor(Math.random() * backgroundPatterns.length)];
+  document.documentElement.style.setProperty('--bg-pattern', "url('" + pick + "')");
+})();
+</script>
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./assets/favicon-192.png">
+<link rel="apple-touch-icon" href="./assets/favicon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-base:#fffdf7;
+    --bg-surface:#ffffff;
+    --bg-surface-2:#f5f2e8;
+    --ink:#1b2a4a;
+    --ink-soft:#5c6b85;
+    --ink-faint:#667186;
+    --navy:#1b2a4a;
+    --navy-dim:#e8ecf3;
+    --yellow:#ffd93d;
+    --yellow-dark:#f4c200;
+    --yellow-dim:#fff6d6;
+    --silver:#8a94a3;
+    --silver-dim:#eef0f3;
+    --border:#eee7d4;
+    --pill-green-bg:#dcfce7; --pill-green-ink:#15803d;
+    --pill-blue-bg:#dbeafe; --pill-blue-ink:#1d4ed8;
+    --pill-purple-bg:#f3e8ff; --pill-purple-ink:#7e22ce;
+    --pill-teal-bg:#ccfbf1; --pill-teal-ink:#0f766e;
+    --pill-coral-bg:#ffe4e0; --pill-coral-ink:#c2410c;
+    --font-cn:'Noto Sans TC',sans-serif;
+    --font-tech:'Rajdhani',sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth; scroll-padding-top:24px;}
+
+  body{
+    background-repeat: repeat;
+    background-size: auto, 640px auto;
+    background-image:
+      linear-gradient(rgba(255,253,247,.55), rgba(255,253,247,.55)),
+      var(--bg-pattern, url('./assets/bg-pattern-1.webp'));
+    color:var(--ink);
+    font-family:var(--font-cn);
+    line-height:1.6;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  a{color:inherit; text-decoration:none;}
+
+  :focus-visible{
+    outline:2px solid var(--navy);
+    outline-offset:3px;
+    border-radius:4px;
+  }
+
+  button, input{font-family:inherit;}
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  /* ===== Corner nav (top-right floating menu) ===== */
+  .corner-nav{
+    position:fixed;
+    top:18px; right:18px;
+    z-index:30;
+  }
+
+  .corner-nav-toggle{
+    width:48px; height:48px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:rgba(255,253,250,.92);
+    backdrop-filter:blur(10px);
+    box-shadow:0 8px 20px -8px rgba(28,39,64,.25);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem;
+    color:var(--navy);
+    cursor:pointer;
+    position:relative;
+  }
+
+  .corner-nav-toggle .dot{
+    position:absolute;
+    top:8px; right:8px;
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--yellow);
+    box-shadow:0 0 6px var(--yellow);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  .corner-nav-panel{
+    position:absolute;
+    top:56px; right:0;
+    width:220px;
+    background:rgba(255,253,250,.97);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 16px 34px -10px rgba(28,39,64,.28);
+    transform:translateY(8px) scale(.97);
+    opacity:0;
+    pointer-events:none;
+    transition:all .2s ease;
+  }
+
+  .corner-nav-panel.open{
+    transform:translateY(0) scale(1);
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .nav-brand{
+    font-weight:900;
+    font-size:.94rem;
+    color:var(--ink);
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .nav-links{
+    display:flex;
+    flex-direction:column;
+    gap:11px;
+  }
+
+  .nav-links a{
+    font-size:.88rem;
+    color:var(--ink-soft);
+    transition:color .18s ease;
+  }
+
+  .nav-links a:hover{ color:var(--navy); }
+
+  .nav-status{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px solid var(--border);
+    font-size:.78rem;
+    color:var(--ink-soft);
+  }
+
+  .nav-status .badge-title{ color:var(--navy); font-weight:900; }
+
+  .nav-progress-track{
+    width:100%; height:6px;
+    border-radius:4px;
+    background:var(--bg-surface-2);
+    overflow:hidden;
+    margin-top:8px;
+  }
+
+  .nav-progress-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--yellow), var(--navy));
+    border-radius:4px;
+    transition:width .6s cubic-bezier(.22,.9,.3,1);
+  }
+
+  /* ===== Hero ===== */
+  .hero{ padding:64px 0 60px; }
+
+  .hero-inner{
+    display:grid;
+    grid-template-columns:1fr 1.05fr;
+    gap:76px;
+    align-items:center;
+  }
+
+  .pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:18px;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .pill-green{ background:var(--pill-green-bg); color:var(--pill-green-ink); }
+  .pill-blue{ background:var(--pill-blue-bg); color:var(--pill-blue-ink); }
+  .pill-purple{ background:var(--pill-purple-bg); color:var(--pill-purple-ink); }
+  .pill-teal{ background:var(--pill-teal-bg); color:var(--pill-teal-ink); }
+  .pill-coral{ background:var(--pill-coral-bg); color:var(--pill-coral-ink); }
+
+  .headline-highlight{
+    display:inline-block;
+    background:var(--yellow);
+    padding:2px 14px;
+    border-radius:12px;
+    transform:rotate(-1deg);
+    margin-top:4px;
+  }
+
+  .hero h1{
+    font-size:clamp(2rem, 4.2vw, 3.1rem);
+    font-weight:900;
+    color:var(--ink);
+    line-height:1.15;
+  }
+
+  .hero p.subtitle{
+    margin-top:14px;
+    font-size:clamp(1rem, 1.6vw, 1.1rem);
+    color:var(--ink-soft);
+    max-width:440px;
+  }
+
+  .hero-cta{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-top:26px;
+    padding:15px 28px;
+    background:var(--yellow);
+    color:var(--navy);
+    font-weight:900;
+    font-size:1rem;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    overflow:hidden;
+    box-shadow:0 6px 0 var(--yellow-dark);
+    transition:background .2s ease, box-shadow .15s ease, transform .15s ease;
+  }
+
+  .hero-cta::before{
+    content:'';
+    position:absolute;
+    top:0; left:-60%;
+    width:40%; height:100%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,.5), transparent);
+    transform:skewX(-20deg);
+    transition:left .55s ease;
+  }
+
+  .hero-cta:hover{
+    transform:translateY(2px);
+    box-shadow:0 4px 0 var(--yellow-dark);
+  }
+
+  .hero-cta:hover::before{ left:130%; }
+  .hero-cta:active{ transform:translateY(6px); box-shadow:0 0 0 var(--yellow-dark); }
+
+  /* ===== Two-page flow ===== */
+  .page{ animation:page-in .45s ease both; }
+  .page.hidden{ display:none; }
+
+  .page.leaving{
+    animation:none;
+    opacity:0;
+    transform:translateY(-14px) scale(.99);
+    transition:opacity .32s ease, transform .32s cubic-bezier(.3,0,.6,1);
+    pointer-events:none;
+  }
+
+  .page-start{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+  }
+
+  @media (max-height:520px) and (orientation:landscape){
+    .page-start{ min-height:auto; padding:18px 0; }
+    .hero{ padding:14px 0; }
+    .hero-inner{ gap:28px; }
+    .pill-row{ margin-bottom:10px; }
+    .hero h1{ font-size:1.5rem; }
+    .headline-highlight{ padding:0 10px; }
+    .hero p.subtitle{ margin-top:8px; }
+    .hero-cta{ margin-top:10px; padding:9px 20px; }
+    .hero-visual{ max-width:200px; }
+  }
+
+  @keyframes page-in{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* ---- hero visual (character frame + reactor glow) ---- */
+  .hero-visual{
+    position:relative;
+    width:100%;
+    max-width:460px;
+    margin:0 auto;
+    aspect-ratio:4/5;
+  }
+
+  .hero-reactor-bg{
+    position:absolute;
+    inset:-18% -10%;
+    z-index:0;
+    opacity:.85;
+    pointer-events:none;
+  }
+
+  .hero-reactor-bg svg{ width:100%; height:100%; overflow:visible; }
+
+  .hero-frame{
+    position:relative;
+    z-index:1;
+    width:100%;
+    height:100%;
+    border-radius:22px;
+    border:2px solid var(--yellow);
+    background:linear-gradient(160deg, var(--yellow-dim), var(--navy-dim));
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .hero-frame img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  .hero-frame::before, .hero-frame::after{
+    content:'';
+    position:absolute;
+    width:20px; height:20px;
+    border:2px solid var(--yellow);
+    z-index:2;
+    opacity:.9;
+  }
+  .hero-frame::before{ top:10px; left:10px; border-right:none; border-bottom:none; }
+  .hero-frame::after{ bottom:10px; right:10px; border-left:none; border-top:none; }
+
+  /* ===== reactor keyframes (shared) ===== */
+  .reactor-ring-outer{ transform-origin:100px 100px; animation:spin-cw 22s linear infinite; }
+  .reactor-ring-mid{ transform-origin:100px 100px; animation:spin-ccw 15s linear infinite; }
+  .reactor-ring-inner{ transform-origin:100px 100px; animation:spin-cw 9s linear infinite; }
+  .reactor-core{ animation:core-pulse 2.4s ease-in-out infinite; transform-origin:100px 100px; }
+
+  @keyframes spin-cw{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  @keyframes spin-ccw{ from{transform:rotate(0deg);} to{transform:rotate(-360deg);} }
+  @keyframes core-pulse{ 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.82; transform:scale(1.06);} }
+
+  /* ===== Scroll-reveal (fade + slide up on first view) ===== */
+  .reveal{
+    opacity:0;
+    transform:translateY(22px);
+    transition:opacity .55s ease, transform .55s cubic-bezier(.2,.8,.3,1);
+  }
+  .reveal.in-view{
+    opacity:1;
+    transform:translateY(0);
+  }
+  /* stagger children slightly for a nicer wave effect */
+  .reveal:nth-child(2){ transition-delay:.06s; }
+  .reveal:nth-child(3){ transition-delay:.12s; }
+  .reveal:nth-child(4){ transition-delay:.18s; }
+
+  /* ===== How it works (4-step flow) ===== */
+  .how-it-works{ padding:32px 0 8px; }
+
+  .step-flow{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:16px;
+  }
+
+  .step-flow-item{
+    background:var(--bg-surface);
+    border:2px solid var(--border);
+    border-radius:18px;
+    padding:20px 16px;
+    text-align:center;
+  }
+
+  .step-num{
+    width:38px; height:38px;
+    margin:0 auto 10px;
+    border-radius:50%;
+    background:var(--yellow);
+    color:var(--navy);
+    font-weight:900;
+    font-size:1.05rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .step-title{ font-weight:700; font-size:.95rem; color:var(--ink); margin-bottom:4px; }
+  .step-desc{ font-size:.78rem; color:var(--ink-soft); }
+
+  @media (max-width:760px){
+    .step-flow{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:480px){
+    .step-flow{ grid-template-columns:1fr; }
+  }
+
+  /* ===== Search & filters ===== */
+  .controls{ padding:8px 0 32px; }
+
+  .search-row{
+    max-width:480px;
+    margin:0 auto 20px;
+    position:relative;
+  }
+
+  .search-row input{
+    width:100%;
+    padding:14px 18px 14px 44px;
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    color:var(--ink);
+    font-size:.95rem;
+    transition:border-color .2s, box-shadow .2s;
+  }
+
+  .search-row input::placeholder{ color:var(--ink-faint); }
+
+  .search-row input:focus{
+    border-color:var(--navy);
+    box-shadow:0 0 0 3px var(--navy-dim);
+    outline:none;
+  }
+
+  .search-icon{
+    position:absolute;
+    left:16px; top:50%;
+    transform:translateY(-50%);
+    color:var(--ink-faint);
+    font-size:1rem;
+    pointer-events:none;
+  }
+
+  .filter-groups{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+  }
+
+  .chip{
+    padding:8px 18px;
+    border-radius:20px;
+    border:2px solid var(--border);
+    background:var(--bg-surface);
+    color:var(--ink-soft);
+    font-size:.85rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .18s ease;
+    white-space:nowrap;
+  }
+
+  .chip:hover{ border-color:var(--yellow-dark); color:var(--navy); }
+
+  .chip.active{
+    background:var(--yellow);
+    border-color:var(--yellow-dark);
+    color:var(--navy);
+  }
+
+  /* ===== Section heading ===== */
+  .section-head{
+    text-align:center;
+    margin-bottom:28px;
+  }
+
+  .section-head h2{
+    font-size:clamp(1.4rem, 2.6vw, 1.9rem);
+    font-weight:900;
+    color:var(--ink);
+  }
+
+  .section-head p{
+    margin-top:8px;
+    color:var(--ink-soft);
+    font-size:.92rem;
+  }
+
+  /* ===== Game grid — HUD panel cards ===== */
+  .grid-section{ padding-bottom:80px; }
+
+  .empty-state{
+    text-align:center;
+    color:var(--ink-faint);
+    padding:60px 20px;
+    display:none;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(270px, 1fr));
+    gap:24px;
+    perspective:1200px;
+  }
+
+  .card{
+    background:var(--bg-surface);
+    border:2px solid var(--border);
+    border-radius:22px;
+    padding:22px 22px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:13px;
+    position:relative;
+    overflow:hidden;
+    transition:transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease, border-color .2s ease;
+  }
+
+  .card-topbar{
+    position:absolute;
+    top:0; left:0; right:0;
+    height:6px;
+    background:var(--yellow);
+  }
+
+  .card:hover{
+    transform:translateY(-6px);
+    border-color:var(--yellow-dark);
+    box-shadow:0 16px 28px -14px rgba(27,42,74,.25);
+  }
+
+  .card-top{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .card-icon{
+    width:52px; height:52px;
+    border-radius:50%;
+    background:var(--pill-blue-bg);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+
+  .card-icon-emoji{ font-size:1.6rem; line-height:1; }
+
+  .card-icon img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+  }
+
+  .card h3{
+    font-size:1.1rem;
+    font-weight:700;
+    color:var(--ink);
+  }
+
+  .tag{
+    font-size:.74rem;
+    color:var(--ink-faint);
+    margin-top:2px;
+    font-family:var(--font-tech);
+    letter-spacing:.02em;
+  }
+
+  .card .desc{
+    font-size:.86rem;
+    color:var(--ink-soft);
+    flex:1;
+  }
+
+  .meter-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .meter-label{
+    font-size:.72rem;
+    color:var(--ink-faint);
+    font-family:var(--font-tech);
+  }
+
+  .difficulty-label{
+    font-size:.72rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    background:var(--bg-surface-2);
+    padding:2px 8px;
+    border-radius:8px;
+  }
+
+  .meter{
+    display:flex;
+    gap:3px;
+  }
+
+  .meter span{
+    width:14px; height:6px;
+    border-radius:2px;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border);
+  }
+
+  .meter span.on{
+    background:var(--yellow);
+    border-color:var(--yellow);
+  }
+
+  .play-btn{
+    display:block;
+    width:100%;
+    margin-top:2px;
+    padding:13px;
+    text-align:center;
+    border-radius:14px;
+    border:none;
+    background:var(--navy);
+    color:#fff;
+    font-weight:900;
+    font-size:.93rem;
+    cursor:pointer;
+    box-shadow:0 4px 0 #0f1830;
+    transition:box-shadow .15s ease, transform .15s ease;
+  }
+
+  .play-btn:hover{ transform:translateY(1px); box-shadow:0 3px 0 #0f1830; }
+  .play-btn:active{ transform:translateY(4px); box-shadow:0 0 0 #0f1830; }
+
+  .played-mark{
+    font-size:.68rem;
+    color:var(--pill-green-ink);
+    background:var(--pill-green-bg);
+    border:1px solid var(--border);
+    padding:3px 9px;
+    border-radius:8px;
+    display:none;
+    font-family:var(--font-tech);
+    letter-spacing:.02em;
+  }
+
+  .card.is-played .played-mark{ display:inline-block; }
+
+  /* ===== Achievements section ===== */
+  .achievements{ padding:20px 0 76px; }
+
+  .tier-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:18px;
+    max-width:920px;
+    margin:0 auto 30px;
+  }
+
+  .tier-card{
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px 16px;
+    text-align:center;
+    position:relative;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .tier-card .tier-icon{
+    width:84px; height:84px;
+    margin:0 auto 8px;
+  }
+  .tier-card .tier-icon img{ width:100%; height:100%; object-fit:contain; }
+  .tier-card .tier-name{ font-weight:700; font-size:.92rem; color:var(--ink); }
+  .tier-card .tier-req{ font-size:.74rem; color:var(--ink-faint); margin-top:4px; font-family:var(--font-tech); }
+
+  .tier-card.current{
+    border-color:var(--yellow);
+    box-shadow:0 0 0 3px var(--yellow-dim), 0 14px 26px -14px rgba(244,194,0,.4);
+  }
+
+  .tier-card.current::after{
+    content:'目前';
+    position:absolute;
+    top:-10px; left:50%;
+    transform:translateX(-50%);
+    background:var(--navy);
+    color:#fff;
+    font-size:.66rem;
+    padding:3px 10px;
+    border-radius:10px;
+  }
+
+  .overall-progress{
+    max-width:480px;
+    margin:0 auto;
+    text-align:center;
+  }
+
+  .overall-progress .progress-track{
+    height:10px;
+    border-radius:6px;
+    background:var(--bg-surface-2);
+    overflow:hidden;
+    margin:10px 0 8px;
+  }
+
+  .overall-progress .progress-fill{
+    height:100%;
+    border-radius:6px;
+    background:linear-gradient(90deg, var(--yellow), var(--navy));
+    transition:width .6s cubic-bezier(.22,.9,.3,1);
+  }
+
+  /* ===== About section ===== */
+  .about{ padding:10px 0 76px; }
+
+  .about-card{
+    max-width:640px;
+    margin:0 auto;
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:32px;
+    text-align:center;
+    position:relative;
+  }
+
+  .about-card::before, .about-card::after{
+    content:'';
+    position:absolute;
+    width:16px; height:16px;
+    border:2px solid var(--yellow);
+    opacity:.5;
+  }
+  .about-card::before{ top:10px; left:10px; border-right:none; border-bottom:none; }
+  .about-card::after{ bottom:10px; right:10px; border-left:none; border-top:none; }
+
+  .about-card .about-icon{
+    width:64px; height:64px;
+    margin:0 auto 10px;
+    border-radius:50%;
+    overflow:hidden;
+    background:var(--yellow-dim);
+  }
+  .about-card .about-icon img{ width:100%; height:100%; object-fit:contain; }
+  .about-card h3{ font-size:1.15rem; font-weight:700; color:var(--ink); }
+  .about-card p{ margin-top:10px; color:var(--ink-soft); font-size:.92rem; }
+
+  /* ===== Easter egg ===== */
+  .egg-btn{
+    position:fixed;
+    right:20px; bottom:20px;
+    width:54px; height:54px;
+    border-radius:16px;
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    color:var(--navy);
+    font-size:1.4rem;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 24px -8px rgba(28,39,64,.2);
+    z-index:25;
+  }
+
+  .egg-card{
+    position:fixed;
+    right:20px; bottom:86px;
+    width:min(280px, calc(100vw - 40px));
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+    z-index:25;
+    box-shadow:0 16px 34px -10px rgba(28,39,64,.25);
+    transform:translateY(12px) scale(.96);
+    opacity:0;
+    pointer-events:none;
+    transition:all .25s ease;
+  }
+
+  .egg-card.open{ transform:translateY(0) scale(1); opacity:1; pointer-events:auto; }
+  .egg-card h4{ color:var(--navy); font-size:.8rem; margin-bottom:8px; }
+  .egg-card p{ font-size:.86rem; color:var(--ink); }
+
+  footer{
+    text-align:center;
+    padding:24px 20px 46px;
+    color:var(--ink-faint);
+    font-size:.8rem;
+  }
+
+  @media (max-width:820px){
+    .hero-inner{ grid-template-columns:1fr; text-align:center; }
+    .hero p.subtitle{ margin-left:auto; margin-right:auto; }
+    .hero-visual{ order:-1; max-width:340px; }
+  }
+
+  @media (max-width:640px){
+    .hero{ padding:40px 0 44px; }
+    .grid{ grid-template-columns:1fr; }
+    .egg-card{ right:12px; left:12px; width:auto; }
+    .egg-btn{ right:16px; bottom:16px; }
+    .corner-nav-panel{ width:min(220px, calc(100vw - 36px)); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001s !important; animation-iteration-count:1 !important; transition-duration:.001s !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1：開始畫面 ============ -->
+<div id="pageStart" class="page page-start">
+  <div class="wrap">
+    <section class="hero" id="hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="pill-row">
+            <span class="pill pill-green">🧪 動手玩理化</span>
+            <span class="pill pill-blue">🎓 國中適用</span>
+            <span class="pill pill-purple">🎮 2 款探索遊戲</span>
+            <span class="pill pill-teal">🔍 自主探究學習</span>
+          </div>
+          <h1>歡迎來到<br><span class="headline-highlight">理化實驗基地</span></h1>
+          <p class="subtitle">動手玩一玩，從遊戲裡找出科學的規律！</p>
+          <button type="button" id="heroCta" class="hero-cta">開始探索遊戲 →</button>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-reactor-bg">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <radialGradient id="coreGlow" cx="50%" cy="45%" r="60%">
+                  <stop offset="0%" stop-color="#fff6d6"/>
+                  <stop offset="55%" stop-color="#ffd93d"/>
+                  <stop offset="100%" stop-color="#f4a300"/>
+                </radialGradient>
+              </defs>
+              <g class="reactor-ring-outer">
+                <ellipse cx="100" cy="100" rx="90" ry="38" fill="none" stroke="#1b2a4a" stroke-width="3" opacity=".28"/>
+              </g>
+              <g class="reactor-ring-mid">
+                <ellipse cx="100" cy="100" rx="38" ry="90" fill="none" stroke="#1b2a4a" stroke-width="3" opacity=".22"/>
+              </g>
+              <g class="reactor-ring-outer">
+                <circle cx="190" cy="100" r="7" fill="#22c55e"/>
+              </g>
+              <g class="reactor-ring-mid">
+                <circle cx="100" cy="10" r="7" fill="#ef7d5c"/>
+              </g>
+              <g class="reactor-ring-inner">
+                <ellipse cx="100" cy="100" rx="90" ry="38" fill="none" stroke="#3b82f6" stroke-width="3" opacity=".2" transform="rotate(60 100 100)"/>
+              </g>
+              <g class="reactor-core">
+                <circle cx="100" cy="100" r="26" fill="url(#coreGlow)"/>
+              </g>
+            </svg>
+          </div>
+
+          <div class="hero-frame">
+            <img src="./assets/teacher-hero.webp" alt="其哲老師與理化元素插圖" loading="eager" fetchpriority="high" decoding="async">
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ PAGE 2：遊戲清單畫面 ============ -->
+<div id="pageGames" class="page page-games hidden">
+  <div class="corner-nav">
+    <button class="corner-nav-toggle" id="navToggle" aria-label="開啟選單" aria-expanded="false">
+      ☰<span class="dot"></span>
+    </button>
+    <div class="corner-nav-panel" id="navPanel">
+      <div class="nav-brand">理化實驗基地</div>
+      <div class="nav-links">
+        <a href="#" id="navBackHome">回到開始畫面</a>
+        <a href="#games">遊戲探索</a>
+        <a href="#achievements">成就</a>
+        <a href="#about">關於老師</a>
+      </div>
+      <div class="nav-status">
+        目前稱號：<span class="badge-title" id="badgeTitle">見習理化師</span>（<span id="progressPct">0%</span>）
+        <div class="nav-progress-track"><div class="nav-progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section class="how-it-works">
+      <div class="step-flow">
+        <div class="step-flow-item reveal">
+          <div class="step-num">1</div>
+          <div class="step-title">選一款遊戲</div>
+          <div class="step-desc">依單元或難度，挑一款想玩的遊戲</div>
+        </div>
+        <div class="step-flow-item reveal">
+          <div class="step-num">2</div>
+          <div class="step-title">動手玩遊戲</div>
+          <div class="step-desc">跟著步驟操作、觀察、思考</div>
+        </div>
+        <div class="step-flow-item reveal">
+          <div class="step-num">3</div>
+          <div class="step-title">記錄你的發現</div>
+          <div class="step-desc">想想看你發現了什麼規律</div>
+        </div>
+        <div class="step-flow-item reveal">
+          <div class="step-num">4</div>
+          <div class="step-title">解鎖探索稱號</div>
+          <div class="step-desc">玩越多款，稱號等級越高</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="controls" id="games">
+      <div class="section-head">
+        <h2>遊戲探索</h2>
+        <p>挑一款遊戲，開始你的理化冒險</p>
+      </div>
+      <div class="search-row">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜尋遊戲名稱或單元…">
+      </div>
+      <div class="filter-groups" id="filterGroups"></div>
+    </section>
+
+    <section class="grid-section">
+      <div class="grid" id="gameGrid"></div>
+      <p class="empty-state" id="emptyState">找不到符合條件的遊戲，換個關鍵字或篩選試試看。</p>
+    </section>
+
+    <section class="achievements" id="achievements">
+      <div class="section-head">
+        <h2>探索成就</h2>
+        <p>玩得越多，稱號越高階</p>
+      </div>
+      <div class="tier-grid" id="tierGrid"></div>
+      <div class="overall-progress">
+        <span style="font-size:.85rem; color:var(--ink-soft);">整體探索進度</span>
+        <div class="progress-track"><div class="progress-fill" id="overallFill" style="width:0%"></div></div>
+        <span style="font-size:.85rem; color:var(--navy); font-weight:700;" id="overallPct">0%</span>
+      </div>
+    </section>
+
+    <section class="about" id="about">
+      <div class="section-head">
+        <h2>關於老師</h2>
+      </div>
+      <div class="about-card reveal">
+        <div class="about-icon"><img src="./assets/icon-about.webp" alt="" loading="lazy" decoding="async"></div>
+        <h3>其哲老師</h3>
+        <p>國中理化教師，致力於用遊戲化的方式，讓學生在動手操作與探究中學習理化知識。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>理化實驗基地 · 其哲老師 製作</footer>
+</div>
+
+<button class="egg-btn" id="eggBtn" aria-label="每日理化小卡" aria-expanded="false">🧬</button>
+<div class="egg-card" id="eggCard">
+  <h4>今日理化小卡</h4>
+  <p id="eggText"></p>
+</div>
+
+<script>
+/* =========================================================
+   遊戲資料庫 — 未來新增遊戲，直接在下方陣列新增一筆物件即可
+   category 可用值：8up / 8down / 9up / 9down
+   ========================================================= */
+const games = [
+  {
+    id: 'atom-detective',
+    name: '原子偵探社',
+    unit: '八上・原子結構與模型',
+    category: '8up',
+    desc: '化身微觀偵探，找出隱藏在原子核裡的質子與中子真相！',
+    link: './games/atom-detective/index.html',
+    icon: './assets/icon-atom-detective.webp',
+    difficulty: 3
+  },
+  {
+    id: 'element-speed',
+    name: '元素心臟病',
+    unit: '八上・元素與週期表',
+    category: '8up',
+    desc: '考驗反射神經！快速配對週期表符號與元素特性。',
+    link: 'https://applemotocycle-collab.github.io/element-speed-game/',
+    icon: './assets/icon-element-speed.webp',
+    difficulty: 2
+  },
+  {
+    id: 'substance-detective',
+    name: '物質鑑識社',
+    unit: '八上・純物質與混合物',
+    category: '8up',
+    desc: '化身鑑識官，分類純物質、混合物、化合物與元素，破解每一樁案件！',
+    link: 'https://applemotocycle-collab.github.io/substance/',
+    icon: '🔍',
+    difficulty: 3
+  }
+];
+
+const filterDefs = [
+  { group: null, items: [
+      { key: 'all', label: '全部' },
+      { key: '8up', label: '八上' },
+      { key: '8down', label: '八下' },
+      { key: '9up', label: '九上' },
+      { key: '9down', label: '九下' }
+  ]}
+];
+
+const tiers = [
+  { key:'starter', title:'見習理化師', icon:'./assets/badge-starter.webp', min:0 },
+  { key:'explorer', title:'初階探索員', icon:'./assets/badge-explorer.webp', min:1 },
+  { key:'researcher', title:'理化研究員', icon:'./assets/badge-researcher.webp', min:50 },
+  { key:'master', title:'理化大師', icon:'./assets/badge-master.webp', min:100 }
+];
+
+const dailyFacts = [
+  '水分子由 2 個氫原子和 1 個氧原子組成，化學式是 H₂O。',
+  '元素週期表中，同一直行的元素通常有相似的化學性質。',
+  '原子中的電子帶負電，質子帶正電，中子不帶電。',
+  '聲音無法在真空中傳播，因為它需要介質才能傳遞。',
+  '酸鹼中和後，通常會生成鹽類與水。',
+  '氦氣比空氣輕，所以能讓氣球飄浮在空中。',
+  '金屬大多是良好的導電體，因為它們含有自由電子。',
+  '摩擦力的方向永遠與物體運動方向相反。'
+];
+
+let activeFilter = 'all';
+let playedGames = JSON.parse(localStorage.getItem('labPassPlayed') || '[]');
+
+/* ---------- 篩選列渲染 ---------- */
+const filterGroupsEl = document.getElementById('filterGroups');
+filterDefs.forEach(section => {
+  const cluster = document.createElement('div');
+  cluster.className = 'filter-cluster';
+  section.items.forEach(item => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (item.key === activeFilter ? ' active' : '');
+    chip.textContent = item.label;
+    chip.dataset.key = item.key;
+    chip.addEventListener('click', () => {
+      activeFilter = item.key;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderGrid();
+    });
+    cluster.appendChild(chip);
+  });
+  filterGroupsEl.appendChild(cluster);
+});
+
+/* ---------- 卡片渲染 ---------- */
+const gridEl = document.getElementById('gameGrid');
+const emptyEl = document.getElementById('emptyState');
+
+function meterHTML(n){
+  let s = '<div class="meter">';
+  for(let i=1;i<=5;i++){
+    s += `<span class="${i<=n ? 'on' : ''}"></span>`;
+  }
+  s += '</div>';
+  return s;
+}
+
+function difficultyLabel(n){
+  if (n <= 2) return '初級';
+  if (n <= 3) return '中級';
+  return '高級';
+}
+
+function iconHTML(icon){
+  // 支援兩種寫法：圖片路徑（./assets/xxx.webp）或還沒做圖示前先用 emoji 佔位
+  const isImage = /\.(webp|png|jpe?g|svg)$/i.test(icon);
+  return isImage
+    ? `<img src="${icon}" alt="" loading="lazy" decoding="async">`
+    : `<span class="card-icon-emoji">${icon}</span>`;
+}
+
+function renderGrid(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filtered = games.filter(g => {
+    const matchesFilter = activeFilter === 'all' || g.category === activeFilter;
+    const matchesSearch = !q || g.name.toLowerCase().includes(q) || g.unit.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q);
+    return matchesFilter && matchesSearch;
+  });
+
+  gridEl.innerHTML = '';
+  emptyEl.style.display = filtered.length ? 'none' : 'block';
+
+  const categoryHasNoGamesAtAll = activeFilter !== 'all' && !games.some(g => g.category === activeFilter);
+  emptyEl.textContent = categoryHasNoGamesAtAll
+    ? '這個單元的遊戲還在製作中，敬請期待！'
+    : '找不到符合條件的遊戲，換個關鍵字或篩選試試看。';
+
+  filtered.forEach(g => {
+    const card = document.createElement('article');
+    card.className = 'card reveal' + (playedGames.includes(g.id) ? ' is-played' : '');
+
+    card.innerHTML = `
+      <div class="card-topbar"></div>
+      <div class="card-top">
+        <span class="card-icon">${iconHTML(g.icon)}</span>
+        <div>
+          <h3>${g.name}</h3>
+          <div class="tag">${g.unit}</div>
+        </div>
+      </div>
+      <p class="desc">${g.desc}</p>
+      <div class="meter-row">
+        <span class="meter-label">難度</span>
+        ${meterHTML(g.difficulty)}
+        <span class="difficulty-label">${difficultyLabel(g.difficulty)}</span>
+        <span class="played-mark">已探索</span>
+      </div>
+      <a class="play-btn" href="${g.link}">進入遊戲</a>
+    `;
+
+    card.querySelector('.play-btn').addEventListener('click', () => markPlayed(g.id));
+    gridEl.appendChild(card);
+  });
+
+  observeReveal();
+}
+
+/* ---------- 捲動淡入效果（scroll-reveal）---------- */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+function observeReveal(){
+  document.querySelectorAll('.reveal:not(.in-view)').forEach(el => revealObserver.observe(el));
+}
+
+function markPlayed(id){
+  if(!playedGames.includes(id)){
+    playedGames.push(id);
+    localStorage.setItem('labPassPlayed', JSON.stringify(playedGames));
+    updateProgress();
+  }
+}
+
+/* ---------- 探索度 / 稱號 / 成就牆 ---------- */
+const tierGridEl = document.getElementById('tierGrid');
+
+function currentTier(pct){
+  let t = tiers[0];
+  tiers.forEach(tier => { if (pct >= tier.min) t = tier; });
+  return t;
+}
+
+function renderTiers(pct){
+  const active = currentTier(pct);
+  tierGridEl.innerHTML = tiers.map(t => `
+    <div class="tier-card reveal${t.key === active.key ? ' current' : ''}">
+      <div class="tier-icon"><img src="${t.icon}" alt="" loading="lazy" decoding="async"></div>
+      <div class="tier-name">${t.title}</div>
+      <div class="tier-req">${t.min === 0 ? '起始稱號' : '探索度 ' + t.min + '%+'}</div>
+    </div>
+  `).join('');
+  observeReveal();
+}
+
+function updateProgress(){
+  const pct = games.length ? Math.round((playedGames.length / games.length) * 100) : 0;
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('overallFill').style.width = pct + '%';
+  document.getElementById('overallPct').textContent = pct + '%';
+
+  const title = currentTier(pct).title;
+  document.getElementById('badgeTitle').textContent = title;
+
+  renderTiers(pct);
+}
+
+document.getElementById('searchInput').addEventListener('input', renderGrid);
+
+renderGrid();
+updateProgress();
+
+/* ---------- 兩頁切換：開始畫面 ↔ 遊戲清單畫面（淡出→淡入過場） ---------- */
+const pageStart = document.getElementById('pageStart');
+const pageGames = document.getElementById('pageGames');
+const heroCta = document.getElementById('heroCta');
+const navBackHome = document.getElementById('navBackHome');
+
+function switchPage(fromEl, toEl, targetId){
+  fromEl.classList.add('leaving');
+  setTimeout(() => {
+    fromEl.classList.remove('leaving');
+    fromEl.classList.add('hidden');
+    toEl.classList.remove('hidden');
+    window.scrollTo(0, 0);
+    if (targetId) {
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, 300);
+}
+
+function goToGames(targetId){ switchPage(pageStart, pageGames, targetId || 'games'); }
+function goToStart(){ switchPage(pageGames, pageStart); }
+
+heroCta.addEventListener('click', () => goToGames('games'));
+
+/* 如果是從遊戲頁點「返回」連結過來（網址帶 #games），
+   直接顯示遊戲清單頁，不用再按一次「開始探索遊戲」 */
+if (window.location.hash === '#games') {
+  pageStart.classList.add('hidden');
+  pageGames.classList.remove('hidden');
+}
+navBackHome.addEventListener('click', (e) => { e.preventDefault(); goToStart(); });
+
+document.querySelectorAll('.nav-links a[href^="#"]:not(#navBackHome)').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    goToGames(link.getAttribute('href').slice(1));
+  });
+});
+
+/* ---------- 右上角導覽選單 ---------- */
+const navToggle = document.getElementById('navToggle');
+const navPanel = document.getElementById('navPanel');
+
+navToggle.addEventListener('click', () => {
+  const isOpen = navPanel.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', isOpen);
+});
+
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => {
+    navPanel.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  });
+});
+
+document.addEventListener('click', (e) => {
+  if (!navPanel.contains(e.target) && !navToggle.contains(e.target)) {
+    navPanel.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  }
+});
+
+/* ---------- 每日理化小卡 ---------- */
+const eggBtn = document.getElementById('eggBtn');
+const eggCard = document.getElementById('eggCard');
+const dayIndex = new Date().getDate() % dailyFacts.length;
+document.getElementById('eggText').textContent = dailyFacts[dayIndex];
+
+eggBtn.addEventListener('click', () => {
+  const isOpen = eggCard.classList.toggle('open');
+  eggBtn.setAttribute('aria-expanded', isOpen);
+});
+
+document.addEventListener('click', (e) => {
+  if (!eggCard.contains(e.target) && !eggBtn.contains(e.target)) {
+    eggCard.classList.remove('open');
+    eggBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+</script>
+</body>
+</html>
