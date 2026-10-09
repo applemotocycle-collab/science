@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>理化實驗基地 Science Lab Pass</title>
+<script>
+/* =========================================================
+   背景圖庫 — 之後生成更多背景，存進 assets/ 資料夾後，
+   直接在下方陣列加一行檔名即可，每次進站會隨機挑一張。
+   放在 <head> 最前面、以行內 script 同步執行，確保在畫面
+   第一次繪製前就決定好背景，不會有「先看到預設圖、才跳成
+   隨機圖」的閃爍（FOUC）問題。
+   ========================================================= */
+(function setRandomBackground(){
+  var backgroundPatterns = [
+    './assets/bg-pattern-1.webp',
+    './assets/bg-pattern-2.webp',
+    './assets/bg-pattern-3.webp',
+    './assets/bg-pattern-4.webp',
+    './assets/bg-pattern-5.webp',
+    './assets/bg-pattern-6.webp'
+  ];
+  var pick = backgroundPatterns[Math.floor(Math.random() * backgroundPatterns.length)];
+  document.documentElement.style.setProperty('--bg-pattern', "url('" + pick + "')");
+})();
+</script>
+<link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./assets/favicon-192.png">
+<link rel="apple-touch-icon" href="./assets/favicon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-base:#fffdf7;
+    --bg-surface:#ffffff;
+    --bg-surface-2:#f5f2e8;
+    --ink:#1b2a4a;
+    --ink-soft:#5c6b85;
+    --ink-faint:#667186;
+    --navy:#1b2a4a;
+    --navy-dim:#e8ecf3;
+    --yellow:#ffd93d;
+    --yellow-dark:#f4c200;
+    --yellow-dim:#fff6d6;
+    --silver:#8a94a3;
+    --silver-dim:#eef0f3;
+    --border:#eee7d4;
+    --pill-green-bg:#dcfce7; --pill-green-ink:#15803d;
+    --pill-blue-bg:#dbeafe; --pill-blue-ink:#1d4ed8;
+    --pill-purple-bg:#f3e8ff; --pill-purple-ink:#7e22ce;
+    --pill-teal-bg:#ccfbf1; --pill-teal-ink:#0f766e;
+    --pill-coral-bg:#ffe4e0; --pill-coral-ink:#c2410c;
+    --font-cn:'Noto Sans TC',sans-serif;
+    --font-serif:'Noto Serif TC',serif;
+    --font-tech:'Rajdhani',sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth; scroll-padding-top:24px;}
+
+  body{
+    background-repeat: repeat;
+    background-size: auto, 640px auto;
+    background-image:
+      linear-gradient(rgba(255,253,247,.55), rgba(255,253,247,.55)),
+      var(--bg-pattern, url('./assets/bg-pattern-1.webp'));
+    color:var(--ink);
+    font-family:var(--font-cn);
+    line-height:1.6;
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  a{color:inherit; text-decoration:none;}
+
+  :focus-visible{
+    outline:2px solid var(--navy);
+    outline-offset:3px;
+    border-radius:4px;
+  }
+
+  button, input{font-family:inherit;}
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  /* ===== Corner nav (top-right floating menu) ===== */
+  .corner-nav{
+    position:fixed;
+    top:18px; right:18px;
+    z-index:30;
+  }
+
+  .corner-nav-toggle{
+    width:48px; height:48px;
+    border-radius:14px;
+    border:1px solid var(--border);
+    background:rgba(255,253,250,.92);
+    backdrop-filter:blur(10px);
+    box-shadow:0 8px 20px -8px rgba(28,39,64,.25);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem;
+    color:var(--navy);
+    cursor:pointer;
+    position:relative;
+  }
+
+  .corner-nav-toggle .dot{
+    position:absolute;
+    top:8px; right:8px;
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--yellow);
+    box-shadow:0 0 6px var(--yellow);
+    animation:pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  .corner-nav-panel{
+    position:absolute;
+    top:56px; right:0;
+    width:220px;
+    background:rgba(255,253,250,.97);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:16px;
+    box-shadow:0 16px 34px -10px rgba(28,39,64,.28);
+    transform:translateY(8px) scale(.97);
+    opacity:0;
+    pointer-events:none;
+    transition:all .2s ease;
+  }
+
+  .corner-nav-panel.open{
+    transform:translateY(0) scale(1);
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .nav-brand{
+    font-family:var(--font-serif);
+    font-weight:900;
+    font-size:.94rem;
+    color:var(--ink);
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .nav-links{
+    display:flex;
+    flex-direction:column;
+    gap:11px;
+  }
+
+  .nav-links a{
+    font-size:.88rem;
+    color:var(--ink-soft);
+    transition:color .18s ease;
+  }
+
+  .nav-links a:hover{ color:var(--navy); }
+
+  /* ===== Hero ===== */
+  .hero{ padding:64px 0 60px; }
+
+  .hero-inner{
+    display:grid;
+    grid-template-columns:1fr 1.05fr;
+    gap:44px;
+    align-items:center;
+  }
+
+  /* 首頁文字區改用跟手繪插圖同一套水彩色系（取樣自插圖本身的顏色） */
+  .hero-text{
+    --ink:#4a3c2c;
+    --ink-soft:#6e5d49;
+  }
+
+  .pill-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:18px;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:.78rem;
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  /* 首頁膠囊標籤：取樣自手繪插圖本身的水彩色系（鼠尾草綠／淡藍／赭紅／深青綠） */
+  .pill-green{ background:#eef0e2; color:#5c6b4a; }
+  .pill-blue{ background:#e8f1f4; color:#3f6b7d; }
+  .pill-purple{ background:#f7e9e7; color:#9c5a52; }
+  .pill-teal{ background:#e6efe9; color:#3f6358; }
+  .pill-coral{ background:var(--pill-coral-bg); color:var(--pill-coral-ink); }
+
+  .headline-highlight{
+    display:inline-block;
+    background:#dcb56c;
+    padding:2px 14px;
+    border-radius:12px;
+    transform:rotate(-1deg);
+    margin-top:4px;
+  }
+
+  .hero h1{
+    font-family:var(--font-serif);
+    font-size:clamp(2rem, 4.2vw, 3.1rem);
+    font-weight:900;
+    color:var(--ink);
+    line-height:1.15;
+  }
+
+  .hero p.subtitle{
+    font-family:var(--font-serif);
+    margin-top:14px;
+    font-size:clamp(1.05rem, 1.6vw, 1.2rem);
+    font-weight:600;
+    color:var(--ink-soft);
+    max-width:440px;
+  }
+
+  .hero-cta{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    margin-top:26px;
+    padding:15px 28px;
+    background:#dcb56c;
+    color:#4a3c2c;
+    font-family:var(--font-serif);
+    font-weight:900;
+    font-size:1.02rem;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    overflow:hidden;
+    box-shadow:0 6px 0 #a9824a;
+    transition:background .2s ease, box-shadow .15s ease, transform .15s ease;
+  }
+
+  .hero-cta::before{
+    content:'';
+    position:absolute;
+    top:0; left:-60%;
+    width:40%; height:100%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,.5), transparent);
+    transform:skewX(-20deg);
+    transition:left .55s ease;
+  }
+
+  .hero-cta:hover{
+    transform:translateY(2px);
+    box-shadow:0 4px 0 #a9824a;
+  }
+
+  .hero-cta:hover::before{ left:130%; }
+  .hero-cta:active{ transform:translateY(6px); box-shadow:0 0 0 #a9824a; }
+
+  /* ===== Two-page flow ===== */
+  .page{ animation:page-in .45s ease both; }
+  .page.hidden{ display:none; }
+
+  .page.leaving{
+    animation:none;
+    opacity:0;
+    transform:translateY(-14px) scale(.99);
+    transition:opacity .32s ease, transform .32s cubic-bezier(.3,0,.6,1);
+    pointer-events:none;
+  }
+
+  .page-start{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+  }
+
+  @media (max-height:520px) and (orientation:landscape){
+    .page-start{ min-height:auto; padding:18px 0; }
+    .hero{ padding:14px 0; }
+    .hero-inner{ gap:28px; }
+    .pill-row{ margin-bottom:10px; }
+    .hero h1{ font-size:1.5rem; }
+    .headline-highlight{ padding:0 10px; }
+    .hero p.subtitle{ margin-top:8px; }
+    .hero-cta{ margin-top:10px; padding:9px 20px; }
+    .hero-visual{ max-width:200px; }
+  }
+
+  @keyframes page-in{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* ---- hero visual (character frame + reactor glow) ---- */
+  .hero-visual{
+    position:relative;
+    width:100%;
+    max-width:460px;
+    margin:0 auto;
+    aspect-ratio:4/5;
+  }
+
+  .hero-reactor-bg{
+    position:absolute;
+    inset:-18% -10%;
+    z-index:0;
+    opacity:.85;
+    pointer-events:none;
+  }
+
+  .hero-reactor-bg svg{ width:100%; height:100%; overflow:visible; }
+
+  .hero-frame{
+    position:relative;
+    z-index:1;
+    width:100%;
+    height:100%;
+    border-radius:22px;
+    box-shadow:0 18px 40px -18px rgba(74,60,44,.35);
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .hero-frame img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+
+  /* ===== reactor keyframes (shared) ===== */
+  .reactor-ring-outer{ transform-origin:100px 100px; animation:spin-cw 22s linear infinite; }
+  .reactor-ring-mid{ transform-origin:100px 100px; animation:spin-ccw 15s linear infinite; }
+  .reactor-ring-inner{ transform-origin:100px 100px; animation:spin-cw 9s linear infinite; }
+  .reactor-core{ animation:core-pulse 2.4s ease-in-out infinite; transform-origin:100px 100px; }
+
+  @keyframes spin-cw{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  @keyframes spin-ccw{ from{transform:rotate(0deg);} to{transform:rotate(-360deg);} }
+  @keyframes core-pulse{ 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.82; transform:scale(1.06);} }
+
+  /* ===== Scroll-reveal (fade + slide up on first view) ===== */
+  .reveal{
+    opacity:0;
+    transform:translateY(22px);
+    transition:opacity .55s ease, transform .55s cubic-bezier(.2,.8,.3,1);
+  }
+  .reveal.in-view{
+    opacity:1;
+    transform:translateY(0);
+  }
+  /* stagger children slightly for a nicer wave effect */
+  .reveal:nth-child(2){ transition-delay:.06s; }
+  .reveal:nth-child(3){ transition-delay:.12s; }
+  .reveal:nth-child(4){ transition-delay:.18s; }
+
+  /* ===== How it works (4-step flow) ===== */
+  .quote-strip{
+    padding:56px 0;
+    text-align:center;
+  }
+
+  .quote-strip .quote-mark{
+    font-family:var(--font-serif);
+    font-size:2.2rem;
+    color:var(--yellow-dark);
+    line-height:1;
+    margin-bottom:6px;
+  }
+
+  .quote-strip p{
+    font-family:var(--font-serif);
+    font-size:clamp(1.1rem, 2.4vw, 1.5rem);
+    font-weight:700;
+    color:var(--ink);
+    max-width:620px;
+    margin:0 auto;
+    line-height:1.7;
+    letter-spacing:.02em;
+  }
+
+  .quote-strip .quote-rule{
+    width:min(320px, 70%);
+    margin:14px auto 0;
+  }
+  .quote-strip .quote-rule img{ width:100%; height:auto; display:block; }
+
+  /* ===== Search & filters ===== */
+  .controls{ padding:8px 0 32px; }
+
+  .search-row{
+    max-width:480px;
+    margin:0 auto 20px;
+    position:relative;
+  }
+
+  .search-row input{
+    width:100%;
+    padding:14px 18px 14px 44px;
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    color:var(--ink);
+    font-size:.95rem;
+    transition:border-color .2s, box-shadow .2s;
+  }
+
+  .search-row input::placeholder{ color:var(--ink-faint); }
+
+  .search-row input:focus{
+    border-color:var(--navy);
+    box-shadow:0 0 0 3px var(--navy-dim);
+    outline:none;
+  }
+
+  .search-icon{
+    position:absolute;
+    left:16px; top:50%;
+    transform:translateY(-50%);
+    color:var(--ink-faint);
+    font-size:1rem;
+    pointer-events:none;
+  }
+
+  .filter-groups{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+  }
+
+  .chip{
+    padding:8px 18px;
+    border-radius:20px;
+    border:2px solid var(--border);
+    background:var(--bg-surface);
+    color:var(--ink-soft);
+    font-size:.85rem;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .18s ease;
+    white-space:nowrap;
+  }
+
+  .chip:hover{ border-color:var(--yellow-dark); color:var(--navy); }
+
+  .chip.active{
+    background:var(--yellow);
+    border-color:var(--yellow-dark);
+    color:var(--navy);
+  }
+
+  /* ===== Section heading ===== */
+  .section-head{
+    text-align:center;
+    margin-bottom:28px;
+  }
+
+  .section-head h2{
+    font-family:var(--font-serif);
+    font-size:clamp(1.4rem, 2.6vw, 1.9rem);
+    font-weight:900;
+    color:var(--ink);
+  }
+
+  .section-head p{
+    margin-top:8px;
+    color:var(--ink-soft);
+    font-size:.92rem;
+  }
+
+
+  /* ===== 遊戲探索頁：沿用首頁文字風格（襯線體＋金褐色底色標籤） ===== */
+  .page-games{ --ink:#4a3c2c; --ink-soft:#6e5d49; }
+  .page-games .quote-strip p{
+    display:inline-block;
+    background:rgba(220,181,108,.28);
+    padding:10px 22px;
+    border-radius:14px;
+  }
+  .page-games .quote-strip .quote-mark{ color:#a9824a; }
+  .page-games .section-head h2{
+    display:table;
+    margin:0 auto;
+    background:#dcb56c;
+    color:#4a3c2c;
+    padding:2px 18px;
+    border-radius:12px;
+    transform:rotate(-1deg);
+    font-size:clamp(1.5rem, 3vw, 2.1rem);
+  }
+  .page-games .section-head p{
+    display:table;
+    margin:14px auto 0;
+    font-family:var(--font-serif);
+    font-weight:700;
+    font-size:clamp(.98rem, 1.5vw, 1.1rem);
+    color:#6e5d49;
+    background:rgba(220,181,108,.22);
+    padding:5px 16px;
+    border-radius:999px;
+  }
+  .page-games .chip{
+    font-family:var(--font-serif);
+    font-size:.95rem;
+    background:rgba(255,253,247,.85);
+    border-color:#e4d6b8;
+    color:#6e5d49;
+  }
+  .page-games .chip:hover{ border-color:#dcb56c; color:#4a3c2c; }
+  .page-games .chip.active{
+    background:#dcb56c;
+    border-color:#a9824a;
+    color:#4a3c2c;
+    box-shadow:0 3px 0 #a9824a;
+  }
+  .page-games .search-row input{ border-color:#e4d6b8; font-family:var(--font-serif); }
+  .page-games .search-row input:focus{ border-color:#dcb56c; }
+  .page-games .about-card h3{ font-size:1.25rem; }
+  .page-games .about-card p{ font-family:var(--font-serif); font-weight:600; }
+  .page-games footer{ font-family:var(--font-serif); color:#6e5d49; }
+
+  /* ===== Game grid — HUD panel cards ===== */
+  .grid-section{ padding-bottom:80px; }
+
+  .empty-state{
+    text-align:center;
+    color:var(--ink-faint);
+    padding:60px 20px;
+    display:none;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(270px, 1fr));
+    gap:24px;
+  }
+
+  /* 四組卡片主題色，輪流套用在不同遊戲上（博物館卡片風格） */
+  .card.accent-teal   { --accent-ink:var(--pill-teal-ink);   --accent-bg:var(--pill-teal-bg); }
+  .card.accent-blue   { --accent-ink:var(--pill-blue-ink);   --accent-bg:var(--pill-blue-bg); }
+  .card.accent-gold   { --accent-ink:#92650a;                --accent-bg:#fdf1d6; }
+  .card.accent-green  { --accent-ink:var(--pill-green-ink);  --accent-bg:var(--pill-green-bg); }
+
+  .card{
+    --accent-ink:var(--navy);
+    --accent-bg:var(--bg-surface-2);
+    background:linear-gradient(160deg, var(--accent-bg) 0%, var(--bg-surface) 55%);
+    border:1px solid var(--border);
+    border-top:4px solid var(--accent-ink);
+    border-radius:16px;
+    padding:26px 24px 22px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    position:relative;
+    overflow:hidden;
+    transition:transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease;
+  }
+
+  .card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 16px 28px -14px rgba(27,42,74,.22);
+  }
+
+  .card-icon{
+    width:60px; height:60px;
+    border-radius:16px;
+    background:var(--accent-bg);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+    box-shadow:0 4px 10px -4px rgba(27,42,74,.2);
+  }
+
+  .card-icon-emoji{ font-size:1.7rem; line-height:1; }
+
+  .card-icon img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+  }
+
+  .card-eyebrow{
+    font-size:.74rem;
+    font-weight:700;
+    color:var(--accent-ink);
+    letter-spacing:.06em;
+    margin-top:4px;
+  }
+
+  .card h3{
+    font-family:var(--font-serif);
+    font-size:1.28rem;
+    font-weight:700;
+    color:var(--ink);
+    line-height:1.3;
+  }
+
+  .card .desc{
+    font-size:.88rem;
+    color:var(--ink-soft);
+    flex:1;
+    line-height:1.65;
+  }
+
+  .meter-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  .meter-label{
+    font-size:.72rem;
+    color:var(--ink-faint);
+    font-family:var(--font-tech);
+  }
+
+  .difficulty-label{
+    font-size:.72rem;
+    font-weight:700;
+    color:var(--ink-soft);
+    background:var(--bg-surface-2);
+    padding:2px 8px;
+    border-radius:8px;
+  }
+
+  .meter{
+    display:flex;
+    gap:3px;
+  }
+
+  .meter span{
+    width:14px; height:6px;
+    border-radius:2px;
+    background:var(--bg-surface-2);
+    border:1px solid var(--border);
+  }
+
+  .meter span.on{
+    background:var(--accent-ink);
+    border-color:var(--accent-ink);
+  }
+
+  .play-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:4px;
+    font-weight:700;
+    font-size:.92rem;
+    color:var(--accent-ink);
+    transition:gap .2s ease;
+  }
+
+  .play-link:hover{ gap:11px; }
+
+  .played-mark{
+    position:absolute;
+    top:18px; right:18px;
+    font-size:.68rem;
+    color:var(--pill-green-ink);
+    background:var(--pill-green-bg);
+    border:1px solid var(--border);
+    padding:3px 9px;
+    border-radius:8px;
+    display:none;
+    font-family:var(--font-tech);
+    letter-spacing:.02em;
+  }
+
+  .card.is-played .played-mark{ display:inline-block; }
+
+
+  /* ===== 遊戲卡片：沿用首頁風格（暖米色底、襯線字、金褐色底色標籤與按鈕） ===== */
+  .card.accent-teal  { --accent-ink:#3f6358; --accent-bg:#e6efe9; }
+  .card.accent-blue  { --accent-ink:#3f6b7d; --accent-bg:#e8f1f4; }
+  .card.accent-gold  { --accent-ink:#8a6a2f; --accent-bg:#f6ead0; }
+  .card.accent-green { --accent-ink:#5c6b4a; --accent-bg:#eef0e2; }
+  .card{
+    background:linear-gradient(165deg, var(--accent-bg) 0%, #fffdf7 62%);
+    border:1px solid #e9dcc0;
+    border-top:4px solid #dcb56c;
+    box-shadow:0 10px 22px -16px rgba(74,60,44,.35);
+  }
+  .card:hover{ box-shadow:0 18px 30px -16px rgba(74,60,44,.4); }
+  .card-icon{ border-color:#e9dcc0; background:#fffaf0; box-shadow:0 4px 10px -4px rgba(74,60,44,.25); }
+  .card-eyebrow{
+    align-self:flex-start;
+    background:var(--accent-bg);
+    color:var(--accent-ink);
+    border:1px solid rgba(74,60,44,.08);
+    padding:3px 11px;
+    border-radius:999px;
+    font-size:.76rem;
+    margin-top:6px;
+  }
+  .card h3{
+    font-weight:900;
+    color:#4a3c2c;
+    font-size:1.38rem;
+  }
+  .card .desc{
+    font-family:var(--font-serif);
+    font-weight:600;
+    color:#6e5d49;
+    font-size:.93rem;
+  }
+  .meter-label{ font-family:var(--font-serif); color:#8a7a62; font-size:.78rem; }
+  .meter span{ border-color:#e4d6b8; background:#f6efdd; }
+  .meter span.on{ background:#c79d52; border-color:#a9824a; }
+  .difficulty-label{ background:#f3e6c8; color:#6e5d49; font-family:var(--font-serif); }
+  .play-link{
+    align-self:flex-start;
+    margin-top:6px;
+    padding:8px 18px;
+    border-radius:12px;
+    background:#dcb56c;
+    color:#4a3c2c;
+    font-family:var(--font-serif);
+    font-weight:900;
+    box-shadow:0 3px 0 #a9824a;
+    transition:gap .2s ease, transform .15s ease, box-shadow .15s ease;
+  }
+  .play-link:hover{ transform:translateY(-1px); box-shadow:0 4px 0 #a9824a; }
+  .play-link:active{ transform:translateY(2px); box-shadow:0 1px 0 #a9824a; }
+  .played-mark{ background:#eef0e2; color:#5c6b4a; border-color:#d9dcc2; font-family:var(--font-serif); font-weight:700; }
+
+
+  /* ===== 緊湊版卡片排版：圖示與標題並排，難度與按鈕同一行 ===== */
+  .grid{ grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:18px; }
+  .card{
+    display:grid;
+    grid-template-columns:56px 1fr auto;
+    column-gap:14px;
+    row-gap:6px;
+    align-items:center;
+    padding:16px 18px 16px;
+    border-top-width:3px;
+  }
+  .card-icon{ grid-column:1; grid-row:1 / span 2; width:56px; height:56px; border-radius:14px; }
+  .card-eyebrow{ grid-column:2 / 4; grid-row:1; margin:0; align-self:end; justify-self:start; padding:2px 10px; font-size:.72rem; }
+  .card h3{ grid-column:2 / 4; grid-row:2; align-self:start; font-size:1.3rem; line-height:1.25; }
+  .card .desc{ grid-column:1 / 4; grid-row:3; margin-top:6px; font-size:.88rem; line-height:1.6; flex:none; }
+  .meter-row{ grid-column:1 / 3; grid-row:4; margin-top:6px; }
+  .play-link{ grid-column:3; grid-row:4; margin:6px 0 0; padding:6px 14px; font-size:.88rem; align-self:center; justify-self:end; }
+  .played-mark{ top:10px; right:12px; }
+  @media (max-width:420px){
+    .grid{ grid-template-columns:1fr; }
+  }
+
+  /* ===== About section ===== */
+  .about{ padding:10px 0 76px; }
+
+  .about-card{
+    max-width:640px;
+    margin:0 auto;
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:32px;
+    text-align:center;
+    position:relative;
+  }
+
+  .about-card::before, .about-card::after{
+    content:'';
+    position:absolute;
+    width:16px; height:16px;
+    border:2px solid var(--yellow);
+    opacity:.5;
+  }
+  .about-card::before{ top:10px; left:10px; border-right:none; border-bottom:none; }
+  .about-card::after{ bottom:10px; right:10px; border-left:none; border-top:none; }
+
+  .about-card .about-icon{
+    width:112px; height:112px;
+    margin:0 auto 12px;
+    border-radius:50%;
+    overflow:hidden;
+    background:#f3e6c8;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .about-card .about-icon img{ width:100%; height:100%; object-fit:contain; padding:14px; box-sizing:border-box; }
+  .about-card h3{ font-family:var(--font-serif); font-size:1.15rem; font-weight:700; color:var(--ink); }
+  .about-card p{ margin-top:10px; color:var(--ink-soft); font-size:.92rem; }
+
+  /* ===== Easter egg ===== */
+  .egg-next{
+    margin-top:10px;
+    padding:6px 14px;
+    border:none;
+    border-radius:10px;
+    background:#dcb56c;
+    color:#4a3c2c;
+    font-family:var(--font-serif);
+    font-weight:900;
+    font-size:.85rem;
+    cursor:pointer;
+    box-shadow:0 3px 0 #a9824a;
+  }
+  .egg-next:active{ transform:translateY(2px); box-shadow:0 1px 0 #a9824a; }
+
+  .egg-btn{
+    position:fixed;
+    right:20px; bottom:20px;
+    width:54px; height:54px;
+    border-radius:16px;
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    padding:4px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 24px -8px rgba(28,39,64,.2);
+    z-index:25;
+    overflow:hidden;
+  }
+
+  .egg-btn img{ width:100%; height:100%; object-fit:contain; }
+
+  .egg-card{
+    position:fixed;
+    right:20px; bottom:86px;
+    width:min(280px, calc(100vw - 40px));
+    background:var(--bg-surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+    z-index:25;
+    box-shadow:0 16px 34px -10px rgba(28,39,64,.25);
+    transform:translateY(12px) scale(.96);
+    opacity:0;
+    pointer-events:none;
+    transition:all .25s ease;
+  }
+
+  .egg-card.open{ transform:translateY(0) scale(1); opacity:1; pointer-events:auto; }
+  .egg-card h4{ color:var(--navy); font-size:.8rem; margin-bottom:8px; }
+  .egg-card p{ font-size:.86rem; color:var(--ink); }
+
+  footer{
+    text-align:center;
+    padding:24px 20px 46px;
+    color:var(--ink-faint);
+    font-size:.8rem;
+  }
+
+  @media (max-width:820px){
+    .hero-inner{ grid-template-columns:1fr; text-align:center; }
+    .hero p.subtitle{ margin-left:auto; margin-right:auto; }
+    .hero-visual{ order:-1; max-width:340px; }
+  }
+
+  @media (max-width:640px){
+    .hero{ padding:40px 0 44px; }
+    .grid{ grid-template-columns:1fr; }
+    .egg-card{ right:12px; left:12px; width:auto; }
+    .egg-btn{ right:16px; bottom:16px; }
+    .corner-nav-panel{ width:min(220px, calc(100vw - 36px)); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001s !important; animation-iteration-count:1 !important; transition-duration:.001s !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1：開始畫面 ============ -->
+<div id="pageStart" class="page page-start">
+  <div class="wrap">
+    <section class="hero" id="hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="pill-row">
+            <span class="pill pill-green">🧪 動手玩理化</span>
+            <span class="pill pill-blue">🎓 國中適用</span>
+            <span class="pill pill-purple">🎮 6 款探索遊戲</span>
+            <span class="pill pill-teal">🔍 自主探究學習</span>
+          </div>
+          <h1>歡迎來到<br><span class="headline-highlight">理化實驗基地</span></h1>
+          <p class="subtitle">動手玩一玩，從遊戲裡找出科學的規律！</p>
+          <button type="button" id="heroCta" class="hero-cta">開始探索遊戲 →</button>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-frame">
+            <img src="./assets/teacher-hero.webp" alt="其哲老師與理化元素插圖" loading="eager" fetchpriority="high" decoding="async">
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ PAGE 2：遊戲清單畫面 ============ -->
+<div id="pageGames" class="page page-games hidden">
+  <div class="corner-nav">
+    <button class="corner-nav-toggle" id="navToggle" aria-label="開啟選單" aria-expanded="false">
+      ☰<span class="dot"></span>
+    </button>
+    <div class="corner-nav-panel" id="navPanel">
+      <div class="nav-brand">理化實驗基地</div>
+      <div class="nav-links">
+        <a href="#" id="navBackHome">回到開始畫面</a>
+        <a href="#games">遊戲探索</a>
+        <a href="#about">關於老師</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section class="quote-strip reveal">
+      <p>每一次動手實驗，都是與世界重新對話的時刻。</p>
+      <div class="quote-rule"><img src="./assets/quote-ornament.webp" alt="" loading="lazy" decoding="async"></div>
+    </section>
+
+    <section class="controls" id="games">
+      <div class="section-head">
+        <h2>遊戲探索</h2>
+        <p>挑一款遊戲，開始你的理化冒險</p>
+      </div>
+      <div class="search-row">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="搜尋遊戲名稱或單元…">
+      </div>
+      <div class="filter-groups" id="filterGroups"></div>
+    </section>
+
+    <section class="grid-section">
+      <div class="grid" id="gameGrid"></div>
+      <p class="empty-state" id="emptyState">找不到符合條件的遊戲，換個關鍵字或篩選試試看。</p>
+    </section>
+
+    <section class="about" id="about">
+      <div class="section-head">
+        <h2>關於老師</h2>
+      </div>
+      <div class="about-card reveal">
+        <div class="about-icon"><img src="./assets/icon-about.webp" alt="" loading="lazy" decoding="async"></div>
+        <h3>其哲老師</h3>
+        <p>國中理化教師，致力於用遊戲化的方式，讓學生在動手操作與探究中學習理化知識。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>理化實驗基地 · 其哲老師 製作</footer>
+</div>
+
+<button class="egg-btn" id="eggBtn" aria-label="每日理化小卡" aria-expanded="false"><img src="./assets/icon-egg-button.webp" alt="" loading="lazy" decoding="async"></button>
+<div class="egg-card" id="eggCard">
+  <h4>今日理化小卡</h4>
+  <p id="eggText"></p>
+  <button type="button" id="eggNext" class="egg-next">再抽一張 ↻</button>
+</div>
+
+<script>
+/* =========================================================
+   遊戲資料庫 — 未來新增遊戲，直接在下方陣列新增一筆物件即可
+   category 可用值：8up / 8down / 9up / 9down
+   ========================================================= */
+const games = [
+  {
+    id: 'atom-detective',
+    name: '原子偵探社',
+    unit: '八上・原子結構與模型',
+    category: '8up',
+    desc: '化身微觀偵探，找出隱藏在原子核裡的質子與中子真相！',
+    link: 'https://applemotocycle-collab.github.io/atomdetective/',
+    icon: './assets/icon-atom-detective.webp',
+    difficulty: 3
+  },
+  {
+    id: 'element-speed',
+    name: '元素心臟病',
+    unit: '八上・元素與週期表',
+    category: '8up',
+    desc: '考驗反射神經！快速配對週期表符號與元素特性。',
+    link: 'https://applemotocycle-collab.github.io/element-speed-game/',
+    icon: './assets/icon-element-speed.webp',
+    difficulty: 2
+  },
+  {
+    id: 'substance-detective',
+    name: '物質鑑識社',
+    unit: '八上・純物質與混合物',
+    category: '8up',
+    desc: '化身鑑識官，分類純物質、混合物、化合物與元素，破解每一樁案件！',
+    link: 'https://applemotocycle-collab.github.io/substance/',
+    icon: './assets/icon-substance.webp',
+    difficulty: 3
+  },
+  {
+    id: 'vector-racer',
+    name: '極速物理學',
+    unit: '九上・x-t 與 v-t 圖',
+    category: '9up',
+    desc: '駕駛賽車、畫出圖形，看懂位置與速度隨時間的變化！',
+    link: 'https://applemotocycle-collab.github.io/vectorracer/',
+    icon: '🏎️',
+    difficulty: 3
+  },
+  {
+    id: 'density-bartender',
+    name: '密度調飲師',
+    unit: '八上・密度',
+    category: '8up',
+    desc: '調出分層漂亮的飲品，從中看懂密度與浮沉的關係！',
+    link: 'https://applemotocycle-collab.github.io/density/',
+    icon: '🥤',
+    difficulty: 3
+  },
+  {
+    id: 'buoyancy-voyage',
+    name: '航海王',
+    unit: '八下・浮力',
+    category: '8down',
+    desc: '揚帆出海，運用浮力原理闖過每一座島嶼與海域！',
+    link: 'https://applemotocycle-collab.github.io/buoyancy/',
+    icon: '⛵',
+    difficulty: 3
+  }
+];
+
+const filterDefs = [
+  { group: null, items: [
+      { key: 'all', label: '全部' },
+      { key: '8up', label: '八上' },
+      { key: '8down', label: '八下' },
+      { key: '9up', label: '九上' },
+      { key: '9down', label: '九下' }
+  ]}
+];
+
+const dailyFacts = [
+  '水分子由 2 個氫原子和 1 個氧原子組成，化學式是 H₂O。',
+  '元素週期表中，同一直行（同族）的元素通常有相似的化學性質。',
+  '原子中的電子帶負電，質子帶正電，中子不帶電。',
+  '聲音無法在真空中傳播，因為它需要介質才能傳遞。',
+  '酸鹼中和後，通常會生成鹽類與水。',
+  '氦氣比空氣輕，所以能讓氣球飄浮在空中。',
+  '金屬大多是良好的導電體，因為它們含有自由電子。',
+  '摩擦力的方向，與物體相對運動（或運動趨勢）的方向相反。',
+  '密度 = 質量 ÷ 體積。水的密度約 1 g/cm³，密度比水小的物體會浮在水面。',
+  '光在真空中的速率約為每秒 30 萬公里，是宇宙中最快的速度。',
+  '聲音在常溫的空氣中，每秒大約前進 340 公尺。',
+  '慣性是物體保持原本運動狀態的性質，所以急煞車時，乘客會向前傾。',
+  '牛頓第三運動定律：作用力與反作用力大小相等、方向相反，但作用在不同物體上。',
+  '速度 = 位移 ÷ 時間。在 x-t 圖上，圖形的斜率就代表速度。',
+  '阿基米德原理：物體在液體中所受的浮力，等於它排開液體的重量。',
+  '歐姆定律 V = I × R：電壓固定時，電阻愈大，電流就愈小。',
+  '串聯電路中，各處電流相同；並聯電路中，各支路的電壓相同。',
+  '質量守恆定律：化學反應前後，反應物與生成物的總質量不變。',
+  '純物質有固定的熔點與沸點，混合物則沒有。',
+  '在一大氣壓下，水的沸點是 100°C；氣壓愈低的高山上，水的沸點愈低。',
+  '響度與振幅有關，音調與頻率有關，音色則由波形決定。',
+  '熱量會從高溫物體傳向低溫物體，傳遞方式有傳導、對流與輻射。',
+  '溶液加水稀釋後，溶質的量不變，濃度會變小。',
+  '槓桿平衡時：施力 × 施力臂 = 抗力 × 抗力臂。',
+  'pH 小於 7 是酸性，等於 7 是中性，大於 7 是鹼性。',
+  '鐵生鏽是鐵與氧氣、水作用產生氧化鐵的化學變化。',
+  '化學變化常伴隨產生氣體、顏色改變、生成沉澱或溫度變化。'
+];
+
+let activeFilter = 'all';
+let playedGames = JSON.parse(localStorage.getItem('labPassPlayed') || '[]');
+
+/* ---------- 篩選列渲染 ---------- */
+const filterGroupsEl = document.getElementById('filterGroups');
+filterDefs.forEach(section => {
+  const cluster = document.createElement('div');
+  cluster.className = 'filter-cluster';
+  section.items.forEach(item => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (item.key === activeFilter ? ' active' : '');
+    chip.textContent = item.label;
+    chip.dataset.key = item.key;
+    chip.addEventListener('click', () => {
+      activeFilter = item.key;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderGrid();
+    });
+    cluster.appendChild(chip);
+  });
+  filterGroupsEl.appendChild(cluster);
+});
+
+/* ---------- 卡片渲染 ---------- */
+const gridEl = document.getElementById('gameGrid');
+const emptyEl = document.getElementById('emptyState');
+
+function meterHTML(n){
+  let s = '<div class="meter">';
+  for(let i=1;i<=5;i++){
+    s += `<span class="${i<=n ? 'on' : ''}"></span>`;
+  }
+  s += '</div>';
+  return s;
+}
+
+function difficultyLabel(n){
+  if (n <= 2) return '初級';
+  if (n <= 3) return '中級';
+  return '高級';
+}
+
+function iconHTML(icon){
+  // 支援兩種寫法：圖片路徑（./assets/xxx.webp）或還沒做圖示前先用 emoji 佔位
+  const isImage = /\.(webp|png|jpe?g|svg)$/i.test(icon);
+  return isImage
+    ? `<img src="${icon}" alt="" loading="lazy" decoding="async">`
+    : `<span class="card-icon-emoji">${icon}</span>`;
+}
+
+function renderGrid(){
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const filtered = games.filter(g => {
+    const matchesFilter = activeFilter === 'all' || g.category === activeFilter;
+    const matchesSearch = !q || g.name.toLowerCase().includes(q) || g.unit.toLowerCase().includes(q) || g.desc.toLowerCase().includes(q);
+    return matchesFilter && matchesSearch;
+  });
+
+  gridEl.innerHTML = '';
+  emptyEl.style.display = filtered.length ? 'none' : 'block';
+
+  const categoryHasNoGamesAtAll = activeFilter !== 'all' && !games.some(g => g.category === activeFilter);
+  emptyEl.textContent = categoryHasNoGamesAtAll
+    ? '這個單元的遊戲還在製作中，敬請期待！'
+    : '找不到符合條件的遊戲，換個關鍵字或篩選試試看。';
+
+  const accents = ['accent-teal', 'accent-blue', 'accent-gold', 'accent-green'];
+
+  filtered.forEach((g, i) => {
+    const card = document.createElement('article');
+    const accent = accents[i % accents.length];
+    card.className = `card reveal ${accent}` + (playedGames.includes(g.id) ? ' is-played' : '');
+
+    card.innerHTML = `
+      <span class="played-mark">已探索</span>
+      <span class="card-icon">${iconHTML(g.icon)}</span>
+      <div class="card-eyebrow">${g.unit}</div>
+      <h3>${g.name}</h3>
+      <p class="desc">${g.desc}</p>
+      <div class="meter-row">
+        <span class="meter-label">難度</span>
+        ${meterHTML(g.difficulty)}
+        <span class="difficulty-label">${difficultyLabel(g.difficulty)}</span>
+      </div>
+      <a class="play-link" href="${g.link}">進入遊戲 →</a>
+    `;
+
+    card.querySelector('.play-link').addEventListener('click', () => markPlayed(g.id));
+    gridEl.appendChild(card);
+  });
+
+  observeReveal();
+}
+
+/* ---------- 捲動淡入效果（scroll-reveal）---------- */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+function observeReveal(){
+  document.querySelectorAll('.reveal:not(.in-view)').forEach(el => revealObserver.observe(el));
+}
+
+function markPlayed(id){
+  if(!playedGames.includes(id)){
+    playedGames.push(id);
+    localStorage.setItem('labPassPlayed', JSON.stringify(playedGames));
+    renderGrid();
+  }
+}
+
+document.getElementById('searchInput').addEventListener('input', renderGrid);
+
+renderGrid();
+
+/* ---------- 兩頁切換：開始畫面 ↔ 遊戲清單畫面（淡出→淡入過場） ---------- */
+const pageStart = document.getElementById('pageStart');
+const pageGames = document.getElementById('pageGames');
+const heroCta = document.getElementById('heroCta');
+const navBackHome = document.getElementById('navBackHome');
+
+function switchPage(fromEl, toEl, targetId){
+  fromEl.classList.add('leaving');
+  setTimeout(() => {
+    fromEl.classList.remove('leaving');
+    fromEl.classList.add('hidden');
+    toEl.classList.remove('hidden');
+    window.scrollTo(0, 0);
+    if (targetId) {
+      requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, 300);
+}
+
+function goToGames(targetId){ switchPage(pageStart, pageGames, targetId || 'games'); }
+function goToStart(){ switchPage(pageGames, pageStart); }
+
+heroCta.addEventListener('click', () => goToGames('games'));
+
+/* 如果是從遊戲頁點「返回」連結過來（網址帶 #games），
+   直接顯示遊戲清單頁，不用再按一次「開始探索遊戲」 */
+if (window.location.hash === '#games') {
+  pageStart.classList.add('hidden');
+  pageGames.classList.remove('hidden');
+}
+navBackHome.addEventListener('click', (e) => { e.preventDefault(); goToStart(); });
+
+document.querySelectorAll('.nav-links a[href^="#"]:not(#navBackHome)').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    goToGames(link.getAttribute('href').slice(1));
+  });
+});
+
+/* ---------- 右上角導覽選單 ---------- */
+const navToggle = document.getElementById('navToggle');
+const navPanel = document.getElementById('navPanel');
+
+navToggle.addEventListener('click', () => {
+  const isOpen = navPanel.classList.toggle('open');
+  navToggle.setAttribute('aria-expanded', isOpen);
+});
+
+document.querySelectorAll('.nav-links a').forEach(link => {
+  link.addEventListener('click', () => {
+    navPanel.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  });
+});
+
+document.addEventListener('click', (e) => {
+  if (!navPanel.contains(e.target) && !navToggle.contains(e.target)) {
+    navPanel.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  }
+});
+
+/* ---------- 每日理化小卡 ---------- */
+const eggBtn = document.getElementById('eggBtn');
+const eggCard = document.getElementById('eggCard');
+const eggText = document.getElementById('eggText');
+function pickFact(){
+  // 每次打開網頁隨機抽一張，並避免連續兩次抽到同一張
+  let last = -1;
+  try { last = parseInt(localStorage.getItem('labPassLastFact'), 10); } catch(e){}
+  let i;
+  do { i = Math.floor(Math.random() * dailyFacts.length); }
+  while (dailyFacts.length > 1 && i === last);
+  try { localStorage.setItem('labPassLastFact', String(i)); } catch(e){}
+  eggText.textContent = dailyFacts[i];
+}
+pickFact();
+document.getElementById('eggNext').addEventListener('click', pickFact);
+
+eggBtn.addEventListener('click', () => {
+  const isOpen = eggCard.classList.toggle('open');
+  eggBtn.setAttribute('aria-expanded', isOpen);
+});
+
+document.addEventListener('click', (e) => {
+  if (!eggCard.contains(e.target) && !eggBtn.contains(e.target)) {
+    eggCard.classList.remove('open');
+    eggBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+</script>
+</body>
+</html>
