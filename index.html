@@ -336,8 +336,7 @@
     width:100%;
     height:100%;
     border-radius:22px;
-    border:2px solid var(--yellow);
-    background:linear-gradient(160deg, var(--yellow-dim), var(--navy-dim));
+    box-shadow:0 18px 40px -18px rgba(74,60,44,.35);
     overflow:hidden;
     display:flex;
     align-items:center;
@@ -351,16 +350,6 @@
     display:block;
   }
 
-  .hero-frame::before, .hero-frame::after{
-    content:'';
-    position:absolute;
-    width:20px; height:20px;
-    border:2px solid var(--yellow);
-    z-index:2;
-    opacity:.9;
-  }
-  .hero-frame::before{ top:10px; left:10px; border-right:none; border-bottom:none; }
-  .hero-frame::after{ bottom:10px; right:10px; border-left:none; border-top:none; }
 
   /* ===== reactor keyframes (shared) ===== */
   .reactor-ring-outer{ transform-origin:100px 100px; animation:spin-cw 22s linear infinite; }
@@ -764,7 +753,7 @@
           <div class="pill-row">
             <span class="pill pill-green">🧪 動手玩理化</span>
             <span class="pill pill-blue">🎓 國中適用</span>
-            <span class="pill pill-purple">🎮 3 款探索遊戲</span>
+            <span class="pill pill-purple">🎮 6 款探索遊戲</span>
             <span class="pill pill-teal">🔍 自主探究學習</span>
           </div>
           <h1>歡迎來到<br><span class="headline-highlight">理化實驗基地</span></h1>
@@ -773,36 +762,6 @@
         </div>
 
         <div class="hero-visual">
-          <div class="hero-reactor-bg">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <radialGradient id="coreGlow" cx="50%" cy="45%" r="60%">
-                  <stop offset="0%" stop-color="#fff6d6"/>
-                  <stop offset="55%" stop-color="#ffd93d"/>
-                  <stop offset="100%" stop-color="#f4a300"/>
-                </radialGradient>
-              </defs>
-              <g class="reactor-ring-outer">
-                <ellipse cx="100" cy="100" rx="90" ry="38" fill="none" stroke="#1b2a4a" stroke-width="3" opacity=".28"/>
-              </g>
-              <g class="reactor-ring-mid">
-                <ellipse cx="100" cy="100" rx="38" ry="90" fill="none" stroke="#1b2a4a" stroke-width="3" opacity=".22"/>
-              </g>
-              <g class="reactor-ring-outer">
-                <circle cx="190" cy="100" r="7" fill="#22c55e"/>
-              </g>
-              <g class="reactor-ring-mid">
-                <circle cx="100" cy="10" r="7" fill="#ef7d5c"/>
-              </g>
-              <g class="reactor-ring-inner">
-                <ellipse cx="100" cy="100" rx="90" ry="38" fill="none" stroke="#3b82f6" stroke-width="3" opacity=".2" transform="rotate(60 100 100)"/>
-              </g>
-              <g class="reactor-core">
-                <circle cx="100" cy="100" r="26" fill="url(#coreGlow)"/>
-              </g>
-            </svg>
-          </div>
-
           <div class="hero-frame">
             <img src="./assets/teacher-hero.webp" alt="其哲老師與理化元素插圖" loading="eager" fetchpriority="high" decoding="async">
           </div>
@@ -885,7 +844,7 @@ const games = [
     unit: '八上・原子結構與模型',
     category: '8up',
     desc: '化身微觀偵探，找出隱藏在原子核裡的質子與中子真相！',
-    link: './games/atom-detective/index.html',
+    link: 'https://applemotocycle-collab.github.io/atomdetective/',
     icon: './assets/icon-atom-detective.webp',
     difficulty: 3
   },
@@ -907,6 +866,36 @@ const games = [
     desc: '化身鑑識官，分類純物質、混合物、化合物與元素，破解每一樁案件！',
     link: 'https://applemotocycle-collab.github.io/substance/',
     icon: '🔍',
+    difficulty: 3
+  },
+  {
+    id: 'vector-racer',
+    name: '極速物理學',
+    unit: '九上・x-t 與 v-t 圖',
+    category: '9up',
+    desc: '駕駛賽車、畫出圖形，看懂位置與速度隨時間的變化！',
+    link: 'https://applemotocycle-collab.github.io/vectorracer/',
+    icon: '🏎️',
+    difficulty: 3
+  },
+  {
+    id: 'density-bartender',
+    name: '密度調飲師',
+    unit: '八上・密度',
+    category: '8up',
+    desc: '調出分層漂亮的飲品，從中看懂密度與浮沉的關係！',
+    link: 'https://applemotocycle-collab.github.io/density/',
+    icon: '🥤',
+    difficulty: 3
+  },
+  {
+    id: 'buoyancy-voyage',
+    name: '航海王',
+    unit: '八下・浮力',
+    category: '8down',
+    desc: '揚帆出海，運用浮力原理闖過每一座島嶼與海域！',
+    link: 'https://applemotocycle-collab.github.io/buoyancy/',
+    icon: '⛵',
     difficulty: 3
   }
 ];
